@@ -1,10 +1,8 @@
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
-import static java.math.BigDecimal.ONE;
 import static java.math.BigDecimal.valueOf;
 
 public class RaidDamage {
@@ -13,7 +11,7 @@ public class RaidDamage {
         Scanner input = new Scanner(System.in);
         Scanner scanner = new Scanner(System.in);
         new W101Calculator();
-/*
+
         //records all blade values
         ArrayList<BigDecimal> bladeList = new ArrayList<>();
         BigDecimal blades = valueOf(1);
@@ -276,6 +274,6 @@ public class RaidDamage {
                     System.out.println("Invalid command");
                     break;
             }
-        }*/
+        }
     }
 }
