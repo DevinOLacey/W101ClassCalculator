@@ -91,7 +91,7 @@ public class W101Calculator implements BuffConverter, DamageCalculator, DisplayB
         return shields;
     }
     public BigDecimal getTotal() {
-        return total;
+        return calculateTotalDamage();
     }
 
     public void setSpellDamage(BigDecimal spellDamage) {
