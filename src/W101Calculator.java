@@ -21,13 +21,10 @@ public class W101Calculator implements BuffConverter, DamageCalculator, DisplayB
     private  List<BigDecimal> trapList;
     private  List<BigDecimal> weaknessList;
     private  List<BigDecimal> shieldList;
-    private  List<BigDecimal> shieldValues;
-
     private BigDecimal blades;
     private BigDecimal weaknesses;
     private BigDecimal traps;
     private BigDecimal shields;
-    private BigDecimal shieldMultiplier;
     private BigDecimal total;
 
     public W101Calculator() {
@@ -38,10 +35,63 @@ public class W101Calculator implements BuffConverter, DamageCalculator, DisplayB
         this.enemyResist = ZERO;
         this.aura = ONE;
         this.bubble = ONE;
-        this.bladeList = null;
-        this.trapList = null;
-        this.weaknessList = null;
-        this.shieldList = null;
+        this.bladeList = new ArrayList<>();
+        this.trapList = new ArrayList<>();
+        this.weaknessList = new ArrayList<>();
+        this.shieldList = new ArrayList<>();
+        this.blades = ONE;
+        this.traps = ONE;
+        this.weaknesses = ONE;
+        this.shields = ZERO;
+    }
+
+    public BigDecimal getSpellDamage() {
+        return spellDamage;
+    }
+    public BigDecimal getPlayerDamage() {
+        return playerDamage;
+    }
+    public BigDecimal getCritMod() {
+        return critMod;
+    }
+    public BigDecimal getPierce() {
+        return pierce;
+    }
+    public BigDecimal getEnemyResist() {
+        return enemyResist;
+    }
+    public BigDecimal getAura() {
+        return aura;
+    }
+    public BigDecimal getBubble() {
+        return bubble;
+    }
+    public List<BigDecimal> getBladeList() {
+        return bladeList;
+    }
+    public List<BigDecimal> getTrapList() {
+        return trapList;
+    }
+    public List<BigDecimal> getWeaknessList() {
+        return weaknessList;
+    }
+    public List<BigDecimal> getShieldList() {
+        return shieldList;
+    }
+    public BigDecimal getBlades() {
+        return blades;
+    }
+    public BigDecimal getWeaknesses() {
+        return weaknesses;
+    }
+    public BigDecimal getTraps() {
+        return traps;
+    }
+    public BigDecimal getShields() {
+        return shields;
+    }
+    public BigDecimal getTotal() {
+        return total;
     }
 
     public void setSpellDamage(BigDecimal spellDamage) {
@@ -92,6 +142,70 @@ public class W101Calculator implements BuffConverter, DamageCalculator, DisplayB
         this.shields = arrayAdder(shieldList);
     }
 
+    public void removeBlade(){
+        if (!bladeList.isEmpty()) {
+            this.bladeList.remove(bladeList.size() - 1);
+            this.blades = arrayMultiplier(bladeList);
+        }
+    }
+
+    public void removeTrap() {
+        if (!trapList.isEmpty()) {
+            this.trapList.remove(trapList.size() - 1);
+            this.traps = arrayMultiplier(trapList);
+        }
+    }
+
+    public void removeWeakness() {
+        if (!weaknessList.isEmpty()) {
+            this.weaknessList.remove(weaknessList.size() - 1);
+            this.weaknesses = arrayMultiplier(weaknessList);
+        }
+    }
+
+    public void removeShield() {
+        if (!shieldList.isEmpty()) {
+            this.shieldList.remove(shieldList.size() - 1);
+            this.shields = arrayAdder(shieldList);
+        }
+    }
+
+    public void clearBlades(){
+        this.bladeList.clear();
+        this.blades = arrayMultiplier(bladeList);
+    }
+
+    public void clearTraps(){
+        this.trapList.clear();
+        this.traps = arrayMultiplier(trapList);
+    }
+
+    public void clearWeaknesses(){
+        this.weaknessList.clear();
+        this.weaknesses = arrayMultiplier(weaknessList);
+    }
+
+    public void clearShields(){
+        this.shieldList.clear();
+        this.shields = arrayAdder(shieldList);
+    }
+
+    public void clearAura(){
+        this.aura = ONE;
+    }
+    public void clearBubble(){
+        this.bubble = ONE;
+    }
+
+    public void clearAll(){
+        clearBlades();
+        clearTraps();
+        clearWeaknesses();
+        clearShields();
+        clearAura();
+        clearBubble();
+    }
+
     public  BigDecimal calculateTotalDamage() {
         final BigDecimal multiply0 = spellDamage.multiply(playerDamage).setScale(0, RoundingMode.DOWN);
         final BigDecimal multiply1 = multiply0.multiply(aura).setScale(0, RoundingMode.DOWN);
@@ -103,53 +217,53 @@ public class W101Calculator implements BuffConverter, DamageCalculator, DisplayB
     }
 
     public  BigDecimal calculateTotalAfterPiercing() {
-        BigDecimal allShields = arrayAdder(shieldList);
         // FIX SHIELDS PAST THE FIRST ONE
-        BigDecimal shieldMultiplier;
-        ArrayList<BigDecimal> tempShieldList = (ArrayList<BigDecimal>) shieldList;
-        ArrayList<BigDecimal> convertedShieldList = applyConvertDebuff(tempShieldList);
-        int tempShieldValueIndex = tempShieldList.size() - 1;
-        int convertedShieldListIndex = convertedShieldList.size() - 1;
+            BigDecimal thatPierce = pierce;
+            BigDecimal shieldMultiplier;
+            ArrayList<BigDecimal> tempShieldList = (ArrayList<BigDecimal>) shieldList;
+            ArrayList<BigDecimal> convertedShieldList = applyConvertDebuff(tempShieldList);
+            int tempShieldValueIndex = tempShieldList.size() - 1;
+            int convertedShieldListIndex = convertedShieldList.size() - 1;
 
-        // Checks if you can pierce all current shields
-        if (pierce.compareTo(allShields) >= 0) {
-            pierce = pierce.subtract(allShields);
+            // Checks if you can pierce all current shields
+            if (thatPierce.compareTo(shields) >= 0) {
+                thatPierce = thatPierce.subtract(shields);
 
-            // Checks for leftover pierce
-            if (pierce.compareTo(enemyResist) > 0) {
-                pierce = BigDecimal.ZERO;
-                enemyResist = BigDecimal.ZERO;
-            }
-
-            // Final calculation if there was leftover pierce from all the shields
-            this.total = total.multiply(BigDecimal.ONE.subtract(enemyResist.subtract(pierce))).setScale(0, RoundingMode.DOWN);
-
-            // Pierces each shield one by one
-        } else {
-            do {
-                pierce = pierce.subtract(tempShieldList.get(tempShieldList.size() - 1));
-                if (pierce.compareTo(BigDecimal.ZERO) > 0) {
-                    // This section removes shields that no longer have a positive value
-                    shieldList.remove(shieldList.size() - 1);
-                    tempShieldList.remove(tempShieldList.size() - 1);
-                    convertedShieldList.remove(convertedShieldList.size() - 1);
-                    tempShieldValueIndex = shieldList.size() - 1;
-                    convertedShieldListIndex = convertedShieldList.size() - 1;
-                } else {
-                    // Finds the remaining value of the shield after pierce is all used up and changes the value within the arrays
-                    BigDecimal piercedShield = pierce.abs();
-                    tempShieldList.set(tempShieldValueIndex, piercedShield);
-                    convertedShieldList.set(convertedShieldListIndex, convertShield(piercedShield));
+                // Checks for leftover pierce
+                if (thatPierce.compareTo(enemyResist) > 0) {
+                    thatPierce = BigDecimal.ZERO;
+                    enemyResist = BigDecimal.ZERO;
                 }
 
-                // New total multiplier for shields
-                shieldMultiplier = arrayMultiplier(convertedShieldList);
+                // Final calculation if there was leftover pierce from all the shields
+                this.total = total.multiply(BigDecimal.ONE.subtract(enemyResist.subtract(thatPierce))).setScale(0, RoundingMode.DOWN);
 
-            } while (pierce.compareTo(BigDecimal.ZERO) > 0);
+                // Pierces each shield one by one
+            } else {
+                do {
+                    thatPierce = thatPierce.subtract(tempShieldList.get(tempShieldList.size() - 1));
+                    if (thatPierce.compareTo(BigDecimal.ZERO) > 0) {
+                        // This section removes shields that no longer have a positive value
+                        shieldList.remove(shieldList.size() - 1);
+                        tempShieldList.remove(tempShieldList.size() - 1);
+                        convertedShieldList.remove(convertedShieldList.size() - 1);
+                        tempShieldValueIndex = shieldList.size() - 1;
+                        convertedShieldListIndex = convertedShieldList.size() - 1;
+                    } else {
+                        // Finds the remaining value of the shield after pierce is all used up and changes the value within the arrays
+                        BigDecimal piercedShield = thatPierce.abs();
+                        tempShieldList.set(tempShieldValueIndex, piercedShield);
+                        convertedShieldList.set(convertedShieldListIndex, convertShield(piercedShield));
+                    }
 
-            // Final damage calculation for the true total
-            total = total.multiply(shieldMultiplier).multiply(BigDecimal.ONE.subtract(enemyResist)).setScale(0, RoundingMode.DOWN);
-        }
+                    // New total multiplier for shields
+                    shieldMultiplier = arrayMultiplier(convertedShieldList);
+
+                } while (thatPierce.compareTo(BigDecimal.ZERO) > 0);
+
+                // Final damage calculation for the true total
+                total = total.multiply(shieldMultiplier).multiply(BigDecimal.ONE.subtract(enemyResist)).setScale(0, RoundingMode.DOWN);
+            }
         return total;
     }
 
@@ -180,8 +294,8 @@ public class W101Calculator implements BuffConverter, DamageCalculator, DisplayB
 
         if (!bladeList.isEmpty()) {
             System.out.print("Blades: ");
-            for (Object bigDecimal : bladeList) {
-                System.out.printf("%-2.0f " , displayBuff((BigDecimal) bigDecimal));
+            for (BigDecimal bigDecimal : bladeList) {
+                System.out.printf("%-2.0f " , displayBuff(bigDecimal));
             }
             System.out.println();
         } else {
@@ -190,8 +304,8 @@ public class W101Calculator implements BuffConverter, DamageCalculator, DisplayB
 
         if (!trapList.isEmpty()) {
             System.out.print("Traps: ");
-            for (Object bigDecimal : trapList) {
-                System.out.printf("%-2.0f " , displayBuff((BigDecimal) bigDecimal));
+            for (BigDecimal bigDecimal : trapList) {
+                System.out.printf("%-2.0f " , displayBuff(bigDecimal));
             }
             System.out.println();
         } else {
@@ -200,8 +314,8 @@ public class W101Calculator implements BuffConverter, DamageCalculator, DisplayB
 
         if (!weaknessList.isEmpty()) {
             System.out.print("Weaknesses: ");
-            for (Object bigDecimal : weaknessList) {
-                System.out.printf("%-2.0f " , displayBuff((BigDecimal) bigDecimal));
+            for (BigDecimal bigDecimal : weaknessList) {
+                System.out.printf("%-2.0f " , displayBuff(bigDecimal));
             }
             System.out.println();
         } else {
@@ -211,8 +325,8 @@ public class W101Calculator implements BuffConverter, DamageCalculator, DisplayB
         if (!shieldList.isEmpty()) {
             System.out.print("Shields: ");
             shieldList = convertShieldDisplay(shieldList);
-            for (Object bigDecimal : shieldList) {
-                System.out.printf("%-2.0f " , displayBuff((BigDecimal) bigDecimal));
+            for (BigDecimal bigDecimal : shieldList) {
+                System.out.printf("%-2.0f " , displayBuff(bigDecimal));
             }
             System.out.println();
         } else {
@@ -249,26 +363,24 @@ public class W101Calculator implements BuffConverter, DamageCalculator, DisplayB
 
     public static BigDecimal convertShieldMultiplier (ArrayList<BigDecimal> shieldList){
         ArrayList<BigDecimal> shieldValues = new ArrayList<>();
-        for (int i = 0;i < shieldList.size();i++){
-            shieldValues.add(W101Calculator.convertShield(W101Calculator.convertPierce(shieldList.get(i))));
+        for (BigDecimal bigDecimal : shieldList) {
+            shieldValues.add(W101Calculator.convertShield(W101Calculator.convertPierce(bigDecimal)));
         }
-        BigDecimal shieldMultiplier = arrayMultiplier(shieldValues);
-        return shieldMultiplier;
+        return arrayMultiplier(shieldValues);
     }
 
     public static BigDecimal convertShieldsDecimal (ArrayList<BigDecimal> shieldList){
         ArrayList<BigDecimal> shieldDecimals = new ArrayList<>();
-        for (int i = 0;i < shieldList.size();i++){
-            shieldDecimals.add(W101Calculator.convertPierce(shieldList.get(i)));
+        for (BigDecimal bigDecimal : shieldList) {
+            shieldDecimals.add(W101Calculator.convertPierce(bigDecimal));
         }
-        BigDecimal allShields = arrayAdder(shieldDecimals);
-        return allShields;
+        return arrayAdder(shieldDecimals);
     }
 
     public static ArrayList<BigDecimal> convertShieldDisplay (List<BigDecimal> shieldList){
         ArrayList<BigDecimal> shieldDecimals = new ArrayList<>();
-        for (int i = 0;i < shieldList.size();i++){
-            shieldDecimals.add(W101Calculator.convertPierce(shieldList.get(i)));
+        for (BigDecimal bigDecimal : shieldList) {
+            shieldDecimals.add(W101Calculator.convertPierce(bigDecimal));
         }
         return shieldDecimals;
     }
@@ -306,9 +418,8 @@ public class W101Calculator implements BuffConverter, DamageCalculator, DisplayB
         BigDecimal allShields = arrayAdder(shieldList);
         // FIX SHIELDS PAST THE FIRST ONE
         BigDecimal shieldMultiplier;
-        ArrayList<BigDecimal> tempShieldList = shieldList;
-        ArrayList<BigDecimal> convertedShieldList = applyConvertDebuff(tempShieldList);
-        int tempShieldValueIndex = tempShieldList.size() - 1;
+        ArrayList<BigDecimal> convertedShieldList = applyConvertDebuff(shieldList);
+        int tempShieldValueIndex = shieldList.size() - 1;
         int convertedShieldListIndex = convertedShieldList.size() - 1;
 
         // Checks if you can pierce all current shields
@@ -327,18 +438,18 @@ public class W101Calculator implements BuffConverter, DamageCalculator, DisplayB
             // Pierces each shield one by one
         } else {
             do {
-                pierce = pierce.subtract(tempShieldList.get(tempShieldList.size() - 1));
+                pierce = pierce.subtract(shieldList.get(shieldList.size() - 1));
                 if (pierce.compareTo(BigDecimal.ZERO) > 0) {
                     // This section removes shields that no longer have a positive value
                     shieldList.remove(shieldList.size() - 1);
-                    tempShieldList.remove(tempShieldList.size() - 1);
+                    shieldList.remove(shieldList.size() - 1);
                     convertedShieldList.remove(convertedShieldList.size() - 1);
                     tempShieldValueIndex = shieldList.size() - 1;
                     convertedShieldListIndex = convertedShieldList.size() - 1;
                 } else {
                     // Finds the remaining value of the shield after pierce is all used up and changes the value within the arrays
                     BigDecimal piercedShield = pierce.abs();
-                    tempShieldList.set(tempShieldValueIndex, piercedShield);
+                    shieldList.set(tempShieldValueIndex, piercedShield);
                     convertedShieldList.set(convertedShieldListIndex, convertShield(piercedShield));
                 }
 
